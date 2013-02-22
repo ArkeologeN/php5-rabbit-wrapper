@@ -36,4 +36,8 @@ class RabbitConnection extends \AMQPConnection {
         return $this->isConnected();
     }
 
+    public function close() {
+        $this->disconnect();
+    }
+
 }

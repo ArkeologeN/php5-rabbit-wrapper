@@ -86,4 +86,10 @@ class RabbitPublisher {
     public function isPublished() {
         return $this->_isPublished;
     }
+
+    public function __destruct() {
+        if ( $this->getConnection()->isRunning()) {
+            $this->getConnection()->close();
+        }
+    }
 }
