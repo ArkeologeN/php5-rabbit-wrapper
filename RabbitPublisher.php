@@ -9,7 +9,7 @@
 
 namespace Logilim\Rabbit;
 
-class RabbitPublisher {
+class RabbitPublisher  {
 
     private $_options = array(
         'exchange.name' => 'noExchange',
@@ -18,7 +18,6 @@ class RabbitPublisher {
         'publish.key'   => 'key1'
     );
 
-    private $_message = "Message from RabbitPublisher (default)";
 
     private $_isPublished = false;
 
@@ -28,17 +27,22 @@ class RabbitPublisher {
 
     private $_exchange = null;
 
-    public function __construct($message = "",$options = array()) {
+    public function __construct($options = array()) {
         $this->_options = array_merge($this->_options, $options);
-        $this->_message = $message; // Set message to be sent
         $this->_connection = RabbitConnection::getInstance()->build();
     }
 
-    public function publish() {
+
+    public function publish($message = "") {
         try {
-            $this->_makeChannel();
-            $this->_makeExchange();
-            $this->_isPublished = $this->_exchange->publish($this->_message, $this->_options['publish.key']);
+            if ( ! $this->getChannel() instanceof RabbitChannel)
+                $this->_makeChannel();
+
+            if ( ! $this->getExchange() instanceof RabbitExchange)
+                $this->_makeExchange();
+
+
+            $this->_isPublished = $this->getExchange()->publish($message, $this->_options['publish.key']);
         } catch (\Exception $ex) {
             echo "<pre>"; print_r($ex); exit;
         }
@@ -48,6 +52,10 @@ class RabbitPublisher {
         if ( $this->_isWorking()) {
             $this->_channel = RabbitFactory::newChannel($this->getConnection());
         }
+    }
+
+    private function getConnection() {
+        return $this->_connection;
     }
 
     private function _makeExchange() {
@@ -71,18 +79,6 @@ class RabbitPublisher {
         return true;
     }
 
-    private function getChannel() {
-        return $this->_channel;
-    }
-
-    private function getExchange() {
-        return $this->_exchange;
-    }
-
-    private function getConnection() {
-        return $this->_connection;
-    }
-
     public function isPublished() {
         return $this->_isPublished;
     }
@@ -91,5 +87,13 @@ class RabbitPublisher {
         if ( $this->getConnection()->isRunning()) {
             $this->getConnection()->close();
         }
+    }
+
+    private function getChannel() {
+        return $this->_channel;
+    }
+
+    private function getExchange() {
+        return $this->_exchange;
     }
 }

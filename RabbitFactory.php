@@ -14,8 +14,8 @@ class RabbitFactory {
         return new self;
     }
 
-    static function newPublisher($message, $options = array()) {
-        return new RabbitPublisher($message, $options);
+    static function newPublisher($options = array()) {
+        return new RabbitPublisher($options);
     }
 
     static function newExchange(RabbitChannel $channel) {
@@ -24,5 +24,13 @@ class RabbitFactory {
 
     static function newChannel(RabbitConnection $connection) {
         return new RabbitChannel($connection);
+    }
+
+    static function newConsumer($options = array()) {
+        return new RabbitConsumer($options);
+    }
+
+    static function newQueue(RabbitChannel $channel) {
+        return new RabbitQueue($channel);
     }
 }
