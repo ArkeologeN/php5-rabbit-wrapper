@@ -1,13 +1,16 @@
 <?php
-/**
- * Created as RabbitChannel.php.
- * Developer: Hamza Waqas
- * Date:      2/22/13
- * Time:      4:29 PM
- */
+
+
 
 namespace Logilim\Rabbit;
 
+
+/**
+ * Class RabbitChannel
+ * @package Logilim\Rabbit
+ * @author  Hamza  Waqas
+ * @version v1.0
+ */
 class RabbitChannel extends \AMQPChannel {
 
 }
