@@ -1,13 +1,14 @@
 <?php
-/**
- * Created as RabbitConsumer.php.
- * Developer: Hamza Waqas
- * Date:      2/22/13
- * Time:      5:36 PM
- */
+
 
 namespace Logilim\Rabbit;
 
+/**
+ * Works as Client / Consumer for Rabbit Server.
+ * @package Logilim\Rabbit
+ * @author  Hamza Waqas
+ * @version v1.0
+ */
 class RabbitConsumer {
 
     private $_options = array(
@@ -28,8 +29,10 @@ class RabbitConsumer {
 
     private $_queue = null;
 
-
-
+    /**
+     *  Takes the connection configuration.
+     * @param array $options
+     */
     public function __construct($options = array()) {
         $this->_options = array_merge($this->_options, $options);
         $this->_connection = RabbitConnection::getInstance()->build();
@@ -66,6 +69,7 @@ class RabbitConsumer {
 
 
             $this->_makeQueue();
+            return $this;
         } catch (Exception $ex) {
             echo "<pre>"; print_r($ex);
         }
@@ -73,9 +77,9 @@ class RabbitConsumer {
 
     private function _makeQueue() {
         try {
-
             $this->_queue = RabbitFactory::newQueue($this->getChannel());
             $this->getQueue()->setName($this->_options['queue.name']);
+            //$this->getQueue()->setFlags(AMQP_DURABLE);
             $this->getQueue()->declare();
             $this->_bindServices();
         } catch (\Exception $ex) {
@@ -96,13 +100,24 @@ class RabbitConsumer {
     }
 
     private function _bindServices() {
-        $this->getQueue()->bind($this->_options['exchange.name'], $this->_options['publish.key']);
+        $this->getQueue()->bind($this->_options['exchange.name'], $this->_options['queue.name']);
     }
 
-    public function receive($callback) {
-        while ($envelop = $this->getQueue()->get(AMQP_AUTOACK)) {
+    public function receive() {
+        $this->getQueue()->consume(function($envelope, $queue) {
+            global $i;
+            echo "Message $i: " . $envelope->getBody() . "\n";
+            $i++;
+            if ($i > 10) {
+                // Bail after 10 messages
+                return false;
+            }
+        });
+        /*
+         * while ($envelop = $this->getQueue()->get(AMQP_AUTOACK)) {
             $callback($envelop);
         }
+         */
     }
 
     private function _isWorking() {
