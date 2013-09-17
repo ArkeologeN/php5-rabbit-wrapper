@@ -14,6 +14,11 @@ class RabbitConnection extends \AMQPConnection {
     private static $_instance = null;
 
     /**
+     * Removed Constructor to prevent object creation. Now just Singleton
+     */
+    private function __construct() {}
+
+    /**
      * Returns the Instance via Singleton
      * @return RabbitConnection|null
      */
