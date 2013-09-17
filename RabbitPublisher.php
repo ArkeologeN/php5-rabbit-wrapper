@@ -58,7 +58,8 @@ class RabbitPublisher  {
         try {
             $this->_queue = RabbitFactory::newQueue($this->getChannel());
             $this->getQueue()->setName($this->_options['queue.name']);
-            $this->getQueue()->declare();
+            //$this->getQueue()->declare();
+            $this->getQueue()->declareQueue();
             $this->_bindServices();
         } catch (\Exception $ex) {
             echo "<pre>"; print_r($ex); exit;

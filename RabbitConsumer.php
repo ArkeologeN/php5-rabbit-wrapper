@@ -51,7 +51,7 @@ class RabbitConsumer {
                 $this->_exchange->setName($this->_options['exchange.name']);
                 $this->_exchange->setType($this->_options['exchange.type']);
                 $this->_exchange->setFlags($this->_options['exchange.flag']);
-                $this->_exchange->declare();
+                $this->_exchange->declareExchange();
             }
         } catch (\Exception $ex) {
             echo "<pre>"; print_r($ex); exit;
@@ -80,7 +80,7 @@ class RabbitConsumer {
             $this->_queue = RabbitFactory::newQueue($this->getChannel());
             $this->getQueue()->setName($this->_options['queue.name']);
             //$this->getQueue()->setFlags(AMQP_DURABLE);
-            $this->getQueue()->declare();
+            $this->getQueue()->declareQueue();
             $this->_bindServices();
         } catch (\Exception $ex) {
             echo "<pre>"; print_r($ex); exit;
