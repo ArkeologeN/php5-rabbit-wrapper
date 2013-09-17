@@ -103,22 +103,6 @@ class RabbitConsumer {
         $this->getQueue()->bind($this->_options['exchange.name'], $this->_options['queue.name']);
     }
 
-    public function receive() {
-        $this->getQueue()->consume(function($envelope, $queue) {
-            global $i;
-            echo "Message $i: " . $envelope->getBody() . "\n";
-            $i++;
-            if ($i > 10) {
-                // Bail after 10 messages
-                return false;
-            }
-        });
-        /*
-         * while ($envelop = $this->getQueue()->get(AMQP_AUTOACK)) {
-            $callback($envelop);
-        }
-         */
-    }
 
     private function _isWorking() {
         if ( !$this->getConnection()->isRunning()) {
