@@ -80,7 +80,9 @@ class RabbitPublisher  {
                $this->_exchange->setName($this->_options['exchange.name']);
                $this->_exchange->setType($this->_options['exchange.type']);
                $this->_exchange->setFlags($this->_options['exchange.flag']);
-               $this->_exchange->declare();
+               //$this->_exchange->declare();
+               $this->_exchange->declareExchange();
+
            }
        } catch (\Exception $ex) {
            echo "<pre>"; print_r($ex); exit;
