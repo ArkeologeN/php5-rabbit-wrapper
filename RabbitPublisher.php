@@ -1,11 +1,4 @@
 <?php
-/**
- * Created as RabbitPublisher.php.
- * Developer: Hamza Waqas
- * Date:      2/22/13
- * Time:      4:11 PM
- */
-
 
 namespace Logilim\Rabbit;
 
@@ -15,7 +8,8 @@ class RabbitPublisher  {
         'exchange.name' => 'noExchange',
         'exchange.type' => 'fanout',
         'exchange.flag' => AMQP_DURABLE,
-        'publish.key'   => 'key1'
+        'publish.key'   => '',
+        'queue.name'    => ''
     );
 
 
@@ -26,6 +20,8 @@ class RabbitPublisher  {
     private $_channel = null;
 
     private $_exchange = null;
+
+    private $_queue = null;
 
     public function __construct($options = array()) {
         $this->_options = array_merge($this->_options, $options);
@@ -41,8 +37,12 @@ class RabbitPublisher  {
             if ( ! $this->getExchange() instanceof RabbitExchange)
                 $this->_makeExchange();
 
+            if ( $this->_options['exchange.type'] != 'fanout') {
+                if ( ! $this->getQueue() instanceof RabbitQueue)
+                    $this->_makeQueue();
+            }
 
-            $this->_isPublished = $this->getExchange()->publish($message, $this->_options['publish.key']);
+            $this->_isPublished = $this->getExchange()->publish($message, $this->_options['queue.name']);
         } catch (\Exception $ex) {
             echo "<pre>"; print_r($ex); exit;
         }
@@ -52,6 +52,21 @@ class RabbitPublisher  {
         if ( $this->_isWorking()) {
             $this->_channel = RabbitFactory::newChannel($this->getConnection());
         }
+    }
+
+    private function _makeQueue() {
+        try {
+            $this->_queue = RabbitFactory::newQueue($this->getChannel());
+            $this->getQueue()->setName($this->_options['queue.name']);
+            $this->getQueue()->declare();
+            $this->_bindServices();
+        } catch (\Exception $ex) {
+            echo "<pre>"; print_r($ex); exit;
+        }
+    }
+
+    private function _bindServices() {
+        $this->getQueue()->bind($this->_options['exchange.name'], $this->_options['queue.name']);
     }
 
     private function getConnection() {
@@ -95,5 +110,9 @@ class RabbitPublisher  {
 
     private function getExchange() {
         return $this->_exchange;
+    }
+
+    private function getQueue() {
+        return $this->_queue;
     }
 }
