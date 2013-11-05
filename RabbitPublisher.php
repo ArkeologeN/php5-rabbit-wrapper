@@ -2,14 +2,16 @@
 
 namespace Logilim\Rabbit;
 
-class RabbitPublisher  {
+class RabbitPublisher
+{
 
     private $_options = array(
         'exchange.name' => 'noExchange',
         'exchange.type' => 'fanout',
         'exchange.flag' => AMQP_DURABLE,
         'publish.key'   => '',
-        'queue.name'    => ''
+        'queue.name'    => '',
+        'dyno_create' => 0,
     );
 
 
@@ -23,28 +25,49 @@ class RabbitPublisher  {
 
     private $_queue = null;
 
-    public function __construct($options = array()) {
+    public function __construct($options = array())
+    {
         $this->_options = array_merge($this->_options, $options);
         $this->_connection = RabbitConnection::getInstance()->build();
+        $this->_prepare();
+    }
+
+    private function _prepare()
+    {
+        try {
+            if (!$this->getChannel() instanceof RabbitChannel) {
+                $this->_makeChannel();
+            }
+
+            if (!$this->getExchange() instanceof RabbitExchange) {
+                $this->_makeExchange();
+            }
+
+            if ($this->_options['dyno_create'] === 1) {
+                if (!$this->getQueue() instanceof RabbitQueue) {
+                    $this->_makeQueue();
+                }
+            } else {
+                if ($this->_options['exchange.type'] != 'fanout') {
+                    if (!$this->getQueue() instanceof RabbitQueue) {
+                        $this->_makeQueue();
+                    }
+                }
+            }
+        } catch (\Exception $ex) {
+            echo $ex->getMessage();
+            exit;
+        }
     }
 
 
-    public function publish($message = "") {
+    public function publish($message = "")
+    {
         try {
-            if ( ! $this->getChannel() instanceof RabbitChannel)
-                $this->_makeChannel();
-
-            if ( ! $this->getExchange() instanceof RabbitExchange)
-                $this->_makeExchange();
-
-            if ( $this->_options['exchange.type'] != 'fanout') {
-                if ( ! $this->getQueue() instanceof RabbitQueue)
-                    $this->_makeQueue();
-            }
-
             $this->_isPublished = $this->getExchange()->publish($message, $this->_options['queue.name']);
         } catch (\Exception $ex) {
-            echo "<pre>"; print_r($ex); exit;
+            echo $ex->getMessage();
+            exit;
         }
     }
 
@@ -58,11 +81,14 @@ class RabbitPublisher  {
         try {
             $this->_queue = RabbitFactory::newQueue($this->getChannel());
             $this->getQueue()->setName($this->_options['queue.name']);
-            //$this->getQueue()->declare();
+            if ($this->_options['dyno_create'] === 1)
+                $this->getQueue()->setArgument('x-expires',1800000);
+
             $this->getQueue()->declareQueue();
             $this->_bindServices();
         } catch (\Exception $ex) {
-            echo "<pre>"; print_r($ex); exit;
+            echo $ex->getMessage();
+            exit;
         }
     }
 
@@ -86,12 +112,12 @@ class RabbitPublisher  {
 
            }
        } catch (\Exception $ex) {
-           echo "<pre>"; print_r($ex); exit;
+           echo $ex->getMessage(); exit;
        }
     }
 
     private function _isWorking() {
-        if ( !$this->getConnection()->isRunning()) {
+        if (!$this->getConnection()->isRunning()) {
             $this->getConnection()->start();
         }
         return true;
@@ -115,6 +141,9 @@ class RabbitPublisher  {
         return $this->_exchange;
     }
 
+    /**
+     * @return RabbitQueue
+     */
     private function getQueue() {
         return $this->_queue;
     }
